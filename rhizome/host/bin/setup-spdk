@@ -1,0 +1,42 @@
+#!/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../../common/lib/util"
+require_relative "../lib/spdk_path"
+require_relative "../lib/spdk_setup"
+require "fileutils"
+
+unless (verb = ARGV.shift)
+  puts "expected verb as argument"
+  exit 1
+end
+
+unless (version = ARGV.shift)
+  puts "expected version as argument"
+  exit 1
+end
+
+spdk_setup = SpdkSetup.new(version)
+
+case verb
+when "install"
+  unless (cpu_count = ARGV.shift)
+    puts "expected cpu_count as argument"
+    exit 1
+  end
+  # YYY: The default is used for backward comaptibility. Make it mandatory after
+  # the upgrade.
+  os_version = ARGV.shift || "ubuntu-22.04"
+  spdk_setup.install_package(os_version: os_version)
+  spdk_setup.create_hugepages_mount
+  spdk_setup.create_conf
+  spdk_setup.create_service(cpu_count: cpu_count.to_i)
+  spdk_setup.enable_services
+when "start"
+  spdk_setup.start_services
+when "verify"
+  spdk_setup.verify_spdk
+when "remove"
+  spdk_setup.stop_and_remove_services
+  spdk_setup.remove_paths
+end

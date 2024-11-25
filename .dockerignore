@@ -1,0 +1,9 @@
+.git
+.env
+.env.rb
+coverage
+demo/.env
+
+# Frontend
+node_modules
+assets/css/app.css

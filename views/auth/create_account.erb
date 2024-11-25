@@ -1,0 +1,48 @@
+<% @page_title = "Create Account" %>
+
+<% @page_message = "Create a new account" %>
+
+<form class="rodauth space-y-6" role="form" method="POST">
+  <%== rodauth.create_account_additional_form_tags %>
+  <%== rodauth.csrf_tag %>
+
+  <%== render(
+    "components/form/text",
+    locals: {
+      name: "name",
+      label: "Full Name",
+      attributes: {
+        required: true,
+        autocomplete: "name"
+      }
+    }
+  ) %>
+
+  <%== render("components/rodauth/login_field") %>
+
+  <% if rodauth.create_account_set_password? %>
+    <%== render("components/rodauth/password_field") %>
+
+    <% if rodauth.require_password_confirmation? %>
+      <%== render("components/rodauth/password_field", locals: {confirm: true}) %>
+    <% end %>
+  <% end %>
+
+  <%== render("components/form/cloudflare_turnstile") %>
+
+  <div class="flex flex-col text-center">
+    <%== render("components/form/submit_button", locals: { text: "Create Account" }) %>
+    <a href="/login" class="mt-2 text-sm font-semibold leading-6 text-gray-900">Sign in to existing account</a>
+  </div>
+
+  <% if Config.managed_service %>
+  <div class="flex items-center justify-center">
+    <p class="text-sm text-gray-500 text-center">By signing up you agree to our
+      <a
+        href="https://ubicloud.com/terms-of-service"
+        target="_blank"
+        class="font-medium text-orange-500 hover:text-orange-600 underline underline-offset-2"
+      >terms of service</a>.</p>
+  </div>
+  <% end %>
+</form>

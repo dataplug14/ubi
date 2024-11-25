@@ -1,0 +1,14 @@
+<% name ||= nil
+extra_class ||= nil %>
+
+<%== render(
+  "components/button",
+  locals: {
+    text: text,
+    extra_class: extra_class,
+    attributes: {
+      "type" => "submit",
+      "name" => name
+    }
+  }
+) %>

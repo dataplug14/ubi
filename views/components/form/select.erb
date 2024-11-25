@@ -1,0 +1,46 @@
+<% name ||= nil
+label ||= nil
+options ||= {}
+selected = flash.dig("old", name) || selected
+placeholder ||= nil
+error ||= flash.dig("errors", name)
+description ||= nil
+attributes ||= {} %>
+
+<div class="space-y-2 text-gray-900">
+  <% if label %>
+    <label for="<%= name %>" class="text-sm font-medium leading-6"><%= label %></label>
+  <% end %>
+  <select
+    id="<%= name %>"
+    name="<%= name %>"
+    class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 shadow-sm ring-1 ring-inset focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 <%= error ? "text-red-900 ring-red-300 placeholder:text-red-300 focus:ring-red-500" : "text-gray-900 ring-gray-300 placeholder:text-gray-400 focus:ring-orange-600"%>"
+    <% attributes.each do |atr_key, atr_value| %>
+    <%= atr_key %>="<%= atr_value %>"
+    <% end%>
+  >
+    <% if placeholder %>
+      <option value>
+        <%= placeholder %>
+      </option>
+    <% end %>
+    <% options.each do |opt_val, opt_text, opt_classes, opt_attrs| %>
+      <option
+        value="<%= opt_val %>"
+        class="<%= opt_classes %>"
+        <%= (opt_val == selected) ? "selected" : "" %>
+        <% (opt_attrs || {}).each do |opt_atr_key, opt_atr_value| %>
+        <%= opt_atr_key %>="<%= opt_atr_value %>"
+        <% end%>
+      >
+        <%= opt_text %>
+      </option>
+    <% end %>
+  </select>
+  <% if error %>
+    <p class="text-sm text-red-600 leading-6" id="<%= name %>-error"><%= error %></p>
+  <% end %>
+  <% if description %>
+    <p class="text-sm text-gray-500 leading-6" id="<%= name %>-description"><%= description %></p>
+  <% end %>
+</div>

@@ -1,0 +1,413 @@
+<% @page_title = "Project Billing" %>
+
+<% if @billing_info_data %>
+  <div class="space-y-1">
+    <%== render(
+      "components/breadcrumb",
+      locals: {
+        back: @project_data[:path],
+        parts: [%w[Projects /project], [@project_data[:name], @project_data[:path]], %w[Billing #]]
+      }
+    ) %>
+    <%== render("components/page_header", locals: { title: "Project Billing" }) %>
+  </div>
+
+  <div class="grid gap-6">
+    <!-- Summary -->
+    <div>
+      <dl class="grid grid-cols-2 gap-5 <%= (@project_data[:discount] > 0) ? "sm:grid-cols-4" : "sm:grid-cols-3" %>">
+        <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+          <dt class="truncate text-sm font-medium text-gray-500">Current Usage</dt>
+          <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900"><%= @invoices.first[:subtotal] %></dd>
+        </div>
+        <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+          <dt class="truncate text-sm font-medium text-gray-500">Last Month</dt>
+          <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900"><%= (@invoices.count > 1) ? @invoices[1][:subtotal] : "-" %></dd>
+        </div>
+        <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+          <dt class="truncate text-sm font-medium text-gray-500">Remaining Credit</dt>
+          <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900"><%= "$%0.02f" % @project_data[:credit] %></dd>
+        </div>
+        <% if @project_data[:discount] > 0 %>
+          <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+            <dt class="truncate text-sm font-medium text-gray-500">Discount</dt>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900"><%= @project_data[:discount] %>%</dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+    <!-- Billing Info Update Card -->
+    <div class="md:flex md:items-center md:justify-between pb-1 lg:pb-2">
+      <div class="min-w-0 flex-1">
+        <h3 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-2xl sm:tracking-tight">
+          Billing Details
+        </h3>
+      </div>
+    </div>
+    <div class="overflow-hidden rounded-lg shadow ring-1 ring-black ring-opacity-5 bg-white divide-y divide-gray-200">
+      <form action="<%= "#{@project_data[:path]}/billing" %>" method="POST">
+        <%== csrf_tag("#{@project_data[:path]}/billing") %>
+        <div class="px-4 py-5 sm:p-6">
+          <div class="space-y-12">
+            <div>
+              <div class="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-8">
+                <div class="sm:col-span-4">
+                  <%== render(
+                    "components/form/text",
+                    locals: {
+                      name: "name",
+                      label: "Billing Name",
+                      value: @billing_info_data[:name],
+                      attributes: {
+                        required: true,
+                        placeholder: "Individual or Company Name"
+                      }
+                    }
+                  ) %>
+                </div>
+                <div class="sm:col-span-4">
+                  <%== render(
+                    "components/form/text",
+                    locals: {
+                      name: "email",
+                      label: "Billing Email",
+                      value: @billing_info_data[:email],
+                      attributes: {
+                        required: true,
+                        placeholder: "Billing Email"
+                      }
+                    }
+                  ) %>
+                </div>
+                <div class="sm:col-span-4 md:col-span-2">
+                  <%== render(
+                    "components/form/country_select",
+                    locals: {
+                      selected: @billing_info_data[:country],
+                      attributes: {
+                        required: true
+                      }
+                    }
+                  ) %>
+                </div>
+                <div class="sm:col-span-4 md:col-span-2">
+                  <%== render(
+                    "components/form/text",
+                    locals: {
+                      name: "state",
+                      label: "State",
+                      value: @billing_info_data[:state],
+                      attributes: {
+                        placeholder: "State"
+                      }
+                    }
+                  ) %>
+                </div>
+                <div class="sm:col-span-4 md:col-span-2">
+                  <%== render(
+                    "components/form/text",
+                    locals: {
+                      name: "city",
+                      label: "City",
+                      value: @billing_info_data[:city],
+                      attributes: {
+                        placeholder: "City"
+                      }
+                    }
+                  ) %>
+                </div>
+                <div class="sm:col-span-4 md:col-span-2">
+                  <%== render(
+                    "components/form/text",
+                    locals: {
+                      name: "postal_code",
+                      label: "Postal Code",
+                      value: @billing_info_data[:postal_code],
+                      attributes: {
+                        placeholder: "Postal Code"
+                      }
+                    }
+                  ) %>
+                </div>
+                <div class="col-span-full">
+                  <%== render(
+                    "components/form/textarea",
+                    locals: {
+                      name: "address",
+                      label: "Address",
+                      value: @billing_info_data[:address],
+                      attributes: {
+                        required: true
+                      }
+                    }
+                  ) %>
+                </div>
+                <div class="sm:col-span-4">
+                  <%== render(
+                    "components/form/text",
+                    locals: {
+                      name: "tax_id",
+                      label: "Tax ID (Optional)",
+                      value: @billing_info_data[:tax_id]
+                    }
+                  ) %>
+                </div>
+                <div class="sm:col-span-4">
+                  <%== render(
+                    "components/form/text",
+                    locals: {
+                      name: "company_name",
+                      label: "Company Name (Optional)",
+                      value: @billing_info_data[:company_name]
+                    }
+                  ) %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center justify-end gap-x-6">
+            <%== render("components/form/submit_button", locals: { text: "Update" }) %>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- Payment Methods Card -->
+    <div>
+      <div class="md:flex md:items-center md:justify-between pb-1 lg:pb-2">
+        <div class="min-w-0 flex-1">
+          <h3 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-2xl sm:tracking-tight">
+            Payment Methods
+          </h3>
+        </div>
+        <div class="mt-4 flex md:ml-4 md:mt-0">
+          <%== render(
+            "components/button",
+            locals: {
+              text: "Add Payment Method",
+              link: "#{@project_data[:path]}/billing/payment-method/create"
+            }
+          ) %>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-lg shadow ring-1 ring-black ring-opacity-5 bg-white divide-y divide-gray-200">
+        <table class="min-w-full divide-y divide-gray-300">
+          <tbody class="divide-y divide-gray-200 bg-white">
+            <% if @payment_methods.count > 0 %>
+              <% @payment_methods.each do |pm| %>
+                <tr id="payment-method-<%= pm[:ubid]%>">
+                  <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6" scope="row">
+                    <%= pm[:brand].capitalize %>
+                    ending in
+                    <%= pm[:last4] %>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    Expires
+                    <%= pm[:exp_month] %>/<%= pm[:exp_year] %>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    Added on
+                    <%= pm[:created_at] %>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 flex justify-end">
+                    <%== render(
+                      "components/delete_button",
+                      locals: {
+                        url: "#{@project_data[:path]}/billing/payment-method/#{pm[:ubid]}?project_id=#{@project.ubid}",
+                        csrf_url: "#{@project_data[:path]}/billing/payment-method/#{pm[:ubid]}",
+                        confirmation: pm[:last4]
+                      }
+                    ) %>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="2"><div class="text-center text-xl p-4">No payment methods. Add new payment method to able create resources in project.</div></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Invoices -->
+    <div>
+      <div class="md:flex md:items-center md:justify-between pb-1 lg:pb-2">
+        <div class="min-w-0 flex-1">
+          <h3 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-2xl sm:tracking-tight">
+            Invoices
+          </h3>
+        </div>
+      </div>
+      <div class="overflow-hidden rounded-lg shadow ring-1 ring-black ring-opacity-5 bg-white divide-y divide-gray-200">
+        <table class="min-w-full divide-y divide-gray-300">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Invoice</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Amount</th>
+              <th scope="col" class="py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-semibold text-gray-900">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            <% @invoices.each do |inv| %>
+              <tr id="invoice-<%= inv[:ubid]%>">
+                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6" scope="row">
+                  <a href="<%= @project_data[:path] + "/billing" + inv[:path] %>" class="text-orange-600 hover:text-orange-700">
+                    <%= inv[:name] %>
+                  </a>
+                  <span class="text-xs text-gray-400 italic">
+                    <% if inv[:invoice_number] %>
+                      #<%= inv[:invoice_number] %>
+                    <% else %>
+                      (not finalized)
+                    <% end %>
+                  </span>
+                </td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                  <%= inv[:total] %>
+                  <% if inv[:total] != inv[:subtotal] %>
+                    <span class="text-xs italic">(<%= inv[:subtotal] %>)</span>
+                  <% end %>
+                </td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                  <%= inv[:status] %>
+                </td>
+              </tr>
+            <% end %>
+            <% if @invoices.count == 1 %>
+              <tr>
+                <td colspan="3">
+                  <div class="text-center text-lg p-4">No invoices finalized yet. Invoice for the current month will be created on the first day of next
+                    month.</div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <form action="<%= "#{@project_data[:path]}/billing" %>" method="POST">
+    <%== csrf_tag("#{@project_data[:path]}/billing") %>
+
+    <%== render(
+      "components/empty_state",
+      locals: {
+        icon: "hero-banknotes",
+        title: "No billing information",
+        description: "Get started by adding new billing information.",
+        button_title: "Add new billing information"
+      }
+    ) %>
+  </form>
+<% end %>
+<br/>
+<!-- Usage alerts -->
+<div>
+  <div class="md:flex md:items-center md:justify-between pb-1 lg:pb-2">
+    <div class="min-w-0 flex-1">
+      <h3 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-2xl sm:tracking-tight">
+        Usage Alerts
+      </h3>
+    </div>
+  </div>
+  <div class="grid gap-6">
+    <div class="overflow-hidden rounded-lg shadow ring-1 ring-black ring-opacity-5 bg-white divide-y divide-gray-200">
+      <!-- Add usage alert -->
+      <div class="px-4 py-5 sm:p-6">
+        <form action="<%= "#{@project_data[:path]}/usage-alert" %>" role="form" method="POST">
+          <%== csrf_tag("#{@project_data[:path]}/usage-alert") %>
+          <div class="space-y-4">
+            <div>
+              <h2 class="text-lg font-medium leading-6 text-gray-900">Add new usage alert</h2>
+              <p class="mt-1 text-sm text-gray-500">
+                Usage alerts will be sent to your email address. If you want to send alerts to specific email
+                addresses, you need to log in with that email address.
+                <br/>
+                <br/>
+                Please note that alerts are only for informational purposes and no action is taken automatically.
+              </p>
+            </div>
+            <div class="grid grid-cols-12 gap-6">
+              <div class="col-span-5 sm:col-span-3">
+                <%== render(
+                  "components/form/text",
+                  locals: {
+                    name: "alert_name",
+                    label: "Alert Name",
+                    type: "text",
+                    attributes: {
+                      required: true,
+                      placeholder: "Alert Name"
+                    },
+                    extra_class: "pr-3"
+                  }
+                ) %>
+              </div>
+              <div class="col-span-5 sm:col-span-3">
+                <%== render(
+                  "components/form/text",
+                  locals: {
+                    name: "limit",
+                    label: "Limit",
+                    type: "number",
+                    attributes: {
+                      required: true,
+                      placeholder: "100"
+                    },
+                    extra_class: "pr-3"
+                  }
+                ) %>
+              </div>
+              <div class="col-span-2 sm:col-span-3 flex justify-begin items-end">
+                <%== render("components/form/submit_button", locals: { text: "Add" }) %>
+              </div>
+            </div>
+          </div>
+        </form>
+
+      </div>
+      <!-- List alerts -->
+      <% if @usage_alerts.count > 0 %>
+        <table class="min-w-full divide-y divide-gray-300">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-4">Name</th>
+              <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-4">Limit</th>
+              <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-4">E-mail</th>
+              <th scope="col" class="py-3.5 pl-3 pr-4 sm:pr-4">
+                <span class="sr-only">Remove</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            <% @usage_alerts.each do |alert| %>
+              <tr id="alert-<%= alert[:ubid]%>" class="whitespace-nowrap text-sm font-medium">
+                <td class="py-4 pl-4 pr-3 text-gray-900 sm:pl-6" scope="row"><%= alert[:name] %></td>
+                <td class="py-4 pl-4 pr-3 text-gray-900 sm:pl-6" scope="row"><%= alert[:limit] %></td>
+                <td class="py-4 pl-4 pr-3 text-gray-900 sm:pl-6" scope="row"><%= alert[:email] %></td>
+                <td class="py-4 pl-3 pr-4 text-right sm:pr-6">
+                  <%== render(
+                    "components/delete_button",
+                    locals: {
+                      text: "Remove",
+                      url: "#{@project_data[:path]}/usage-alert/#{alert[:ubid]}",
+                      confirmation: alert[:name]
+                    }
+                  ) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="text-center p-4">
+          No usage alerts...
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

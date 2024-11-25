@@ -1,0 +1,37 @@
+#!/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../../common/lib/util"
+
+if ARGV.count != 2
+  fail "Wrong number of arguments. Expected 2, Given #{ARGV.count}"
+end
+
+v = ARGV[0]
+backup_label = ARGV[1]
+
+r "chown postgres /dat"
+
+# Below commands are required for idempotency
+r "rm -rf /dat/#{v}"
+r "rm -rf /etc/postgresql/#{v}"
+
+r "sudo -u postgres wal-g backup-fetch /dat/#{v}/data #{backup_label} --config /etc/postgresql/wal-g.env"
+
+# We want to use pg_createcluster, even with an existing database folder because
+# pg_createcluster does additonal things like configuring systemd. However, it
+# also expect to see .conf files in the data directory, so that it can move them
+# to /etc/postgresql/$VERSION/main. Thus we create a bunch of .conf files.
+r "sudo -u postgres touch /dat/#{v}/data/pg_ident.conf"
+r "sudo -u postgres touch /dat/#{v}/data/pg_hba.conf"
+r "sudo -u postgres touch /dat/#{v}/data/postgresql.conf"
+
+# Technically LATEST label can be used for PITR as well, but we use the label
+# name from backups in PITR case. So backup_label can be used to decide on
+# which signal file to use.
+if backup_label == "LATEST"
+  r "sudo -u postgres touch /dat/#{v}/data/standby.signal"
+else
+  r "sudo -u postgres touch /dat/#{v}/data/recovery.signal"
+end
+r "pg_createcluster #{v} main"

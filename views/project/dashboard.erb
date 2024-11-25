@@ -1,0 +1,59 @@
+<% @page_title = "#{@project_data[:name]} Dashboard" %>
+
+<div class="space-y-1">
+  <%== render(
+    "components/breadcrumb",
+    locals: {
+      back: "/project",
+      parts: [%w[Projects /project], [@project_data[:name], ""]]
+    }
+  ) %>
+  <%== render("components/page_header", locals: { title: "Getting Started with your Project" }) %>
+</div>
+
+<div class="grid gap-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-10">
+    <% [
+      [
+        "hero-folder-open", "bg-teal-50 text-teal-700", "Create Virtual Machine",
+        "Linux-based virtual machines that run on top of virtualized hardware. Comprehensive, cost-effective cloud computing.",
+        "#{@project_data[:path]}/vm/create"
+      ], [
+        "hero-users", "bg-purple-50 text-purple-700", "Add User to Project",
+        "Projects are the central point for working with others within Ubicloud. Get started by adding others to your project to be able to share access and collaborate.",
+        "#{@project_data[:path]}/user"
+      ], [
+        "hero-key", "bg-sky-50 text-sky-700", "Update Access Policy",
+        "Access policies help to specify who can perform particular actions on your project's resources.",
+        "#{@project_data[:path]}/policy"
+      ], [
+        "hero-envelope", "bg-yellow-50 text-yellow-700", "Get Support",
+        "If you need any help with Ubicloud, reach out to our support team for help at support@ubicloud.com.",
+        "mailto:support@ubicloud.com"
+      ]
+    ].each do |icon, color, title, description, link| %>
+      <div
+        class="rounded-lg shadow group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-orange-600"
+      >
+        <div>
+          <span class="inline-flex rounded-lg p-3 <%= color %> ring-4 ring-white">
+            <%== render("components/icon", locals: { name: icon }) %>
+          </span>
+        </div>
+        <div class="mt-8">
+          <h3 class="text-base font-semibold leading-6 text-gray-900">
+            <a href="<%= link %>" class="focus:outline-none">
+              <!-- Extend touch target to entire panel -->
+              <span class="absolute inset-0" aria-hidden="true"></span>
+              <%= title %>
+            </a>
+          </h3>
+          <p class="mt-2 text-sm text-gray-500"><%= description %></p>
+        </div>
+        <span class="pointer-events-none absolute right-6 top-6 text-gray-300 group-hover:text-gray-400">
+          <%== render("components/icon", locals: { name: "hero-arrow-up-right" }) %>
+        </span>
+      </div>
+    <% end %>
+  </div>
+</div>

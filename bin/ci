@@ -1,0 +1,80 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../loader"
+require "time"
+require "optparse"
+
+def main(options)
+  hetzner_server_st = Prog::Test::HetznerServer.assemble(vm_host_id: options[:vm_host_id])
+  wait_until(hetzner_server_st, "wait")
+
+  tests_to_wait = []
+  if options[:test_cases].include?("vm")
+    encrypted_vms_st = Prog::Test::VmGroup.assemble(storage_encrypted: true, test_reboot: true)
+    log(encrypted_vms_st, "storage_encrypted: true")
+    # Not running in parallel but waiting, since host is rebooted during test.
+    # Rebooting makes the next test to test reboot practically as well depending
+    # on when the host is rebooted and can cause flaky issues for github runner tests.
+    wait_until(encrypted_vms_st)
+
+    unencrypted_vms_st = Prog::Test::VmGroup.assemble(storage_encrypted: false, test_reboot: false)
+    log(unencrypted_vms_st, "storage_encrypted: false")
+    tests_to_wait << [unencrypted_vms_st, nil]
+  end
+
+  github_runner_test_cases = options[:test_cases].select { _1.include?("github_runner") }
+  unless github_runner_test_cases.empty?
+    runner_st = Prog::Test::GithubRunner.assemble(options[:vm_host_id], github_runner_test_cases)
+    tests_to_wait << [runner_st, nil]
+  end
+
+  # Although wait_until will be blocked while checking the first one
+  # it won't affect the total time as other strands will continue in parallel.
+  # No need to make it parallel.
+  tests_to_wait.each do |strand, label|
+    wait_until(strand, label)
+  end
+
+  Semaphore.incr(hetzner_server_st.id, "destroy")
+  wait_until(hetzner_server_st)
+end
+
+def wait_until(st, label = nil)
+  while (loaded_st = Strand[st.id]) && loaded_st.label != label
+    if loaded_st.label == "failed"
+      log(st.reload, "FAILED: #{loaded_st.exitval.fetch("msg")}")
+      st.destroy
+      exit 1
+    end
+    log(st.reload, "waiting #{label ? "for #{label}" : "exit"}")
+    sleep 10
+  end
+  log(st, "reached")
+end
+
+def log(st, msg)
+  resources = case st.prog
+  when "Test::HetznerServer"
+    "VmHost.#{Strand[st.stack.first["vm_host_id"]]&.label}"
+  when "Test::VmGroup"
+    st.stack.first["vms"].map { "Vm.#{Strand[_1]&.label}" }.join(", ")
+  when "Test::Vm"
+    "Vm.#{Strand[st.stack.first["subject_id"]]&.label}"
+  else
+    "#{st.prog}.#{st.label}"
+  end
+  $stdout.write "#{Time.now.utc.iso8601} | #{st.id} | #{st.prog}.#{st.label} | #{msg} | #{resources}\n"
+end
+
+options = {test_cases: ["vm"]}
+OptionParser.new do |opts|
+  opts.on("--vm-host-id VM_HOST_ID", "Use existing vm host") { |v| options[:vm_host_id] = (v.length == 26) ? VmHost.from_ubid(v).id : v }
+  opts.on("--test-cases TEST_CASES", Array, "List of test cases to run separated by comma") { |v| options[:test_cases] = v }
+end.parse!
+
+clover_freeze
+
+$stdout.sync = true
+
+main(options)

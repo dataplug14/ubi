@@ -1,0 +1,145 @@
+<div class="flex grow flex-col gap-y-5 overflow-y-auto bg-orange-600 px-6">
+  <div class="flex h-16 shrink-0 items-center">
+    <img class="h-6 w-auto" src="/logo-white.png" alt="Ubicloud">
+  </div>
+  <nav class="flex flex-1 flex-col">
+    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+      <li>
+        <ul role="list" class="-mx-2 space-y-1">
+          <% if @project_data %>
+            <%== render(
+              "layouts/sidebar/item",
+              locals: {
+                name: "Dashboard",
+                url: "#{@project_data[:path]}/dashboard",
+                is_active: request.path.start_with?("#{@project_data[:path]}/dashboard"),
+                icon: "hero-home"
+              }
+            ) %>
+            <%== render(
+              "layouts/sidebar/item",
+              locals: {
+                name: "Compute",
+                url: "#{@project_data[:path]}/vm",
+                is_active: request.path.start_with?("#{@project_data[:path]}/vm"),
+                icon: "hero-server-stack"
+              }
+            ) %>
+            <%== render(
+              "layouts/sidebar/item",
+              locals: {
+                name: "Networking",
+                url: "#{@project_data[:path]}/private-subnet",
+                is_active:
+                  request.path.start_with?("#{@project_data[:path]}/private-subnet") ||
+                  request.path.start_with?("#{@project_data[:path]}/firewall") ||
+                  request.path.start_with?("#{@project_data[:path]}/load-balancer"),
+                icon: "hero-globe-alt"
+              }
+            ) %>
+            <%== render(
+              "layouts/sidebar/item",
+              locals: {
+                name: "PostgreSQL",
+                url: "#{@project_data[:path]}/postgres",
+                is_active: request.path.start_with?("#{@project_data[:path]}/postgres"),
+                icon: "hero-circle-stack"
+              }
+            ) %>
+          <% else %>
+            <%== render(
+              "layouts/sidebar/item",
+              locals: {
+                name: "Dashboard",
+                url: "/dashboard",
+                is_active: request.path.start_with?("/dashboard"),
+                icon: "hero-home"
+              }
+            ) %>
+            <%== render(
+              "layouts/sidebar/item",
+              locals: {
+                name: "My Account",
+                url: "/account",
+                is_active: request.path.start_with?("/account"),
+                icon: "hero-user"
+              }
+            ) %>
+            <%== render(
+              "layouts/sidebar/item",
+              locals: {
+                name: "Projects",
+                url: "/project",
+                is_active: request.path.start_with?("/project"),
+                icon: "hero-folder-open"
+              }
+            ) %>
+          <% end %>
+        </ul>
+      </li>
+      <% if @project_data && has_project_permission(["Project:user", "Project:policy", "Project:billing", "Project:view"]) %>
+        <li>
+          <div class="text-xs font-semibold leading-6 text-orange-200">Project Details</div>
+          <ul role="list" class="-mx-2 mt-2 space-y-1">
+            <%== render(
+              "layouts/sidebar/item",
+              locals: {
+                name: "Users",
+                url: "#{@project_data[:path]}/user",
+                is_active: request.path.start_with?("#{@project_data[:path]}/user"),
+                icon: "hero-users",
+                has_permission: has_project_permission("Project:user")
+              }
+            ) %>
+            <% if Config.stripe_secret_key %>
+              <%== render(
+                "layouts/sidebar/item",
+                locals: {
+                  name: "Billing",
+                  url: "#{@project_data[:path]}/billing",
+                  is_active: request.path.start_with?("#{@project_data[:path]}/billing"),
+                  icon: "hero-banknotes",
+                  html_id: "billing-icon",
+                  has_permission: has_project_permission("Project:billing")
+                }
+              ) %>
+            <% end %>
+            <%== render(
+              "layouts/sidebar/item",
+              locals: {
+                name: "Settings",
+                url: @project_data[:path],
+                is_active: request.path == @project_data[:path],
+                icon: "hero-cog-6-tooth",
+                has_permission: has_project_permission("Project:view")
+              }
+            ) %>
+          </ul>
+        </li>
+      <% end %>
+      <% if @project_data && has_project_permission("Project:github") %>
+              <li>
+          <div class="text-xs font-semibold leading-6 text-orange-200">Integrations</div>
+          <ul role="list" class="-mx-2 mt-2 space-y-1">
+            <% if Config.github_app_name %>
+              <%== render(
+                "layouts/sidebar/item",
+                locals: {
+                  name: "GitHub Runners",
+                  url: "#{@project_data[:path]}/github",
+                  is_active: request.path.start_with?("#{@project_data[:path]}/github"),
+                  icon: "github",
+                  has_permission: has_project_permission("Project:github")
+                }
+              ) %>
+            <% end %>
+          </ul>
+        </li>
+
+      <% end %>
+      <li class="-mx-6 mt-auto">
+        <%== render("layouts/sidebar/project_switcher") %>
+      </li>
+    </ul>
+  </nav>
+</div>

@@ -1,0 +1,41 @@
+<% @page_title = "Verify New Email" %>
+
+<% if rodauth.authenticated? %>
+  <div class="space-y-1">
+    <%== render("components/page_header", locals: { title: "My Account" }) %>
+  </div>
+
+  <main>
+    <div class="max-w-screen-xl pb-6 lg:pb-16">
+      <div class="overflow-hidden rounded-lg bg-white shadow">
+        <div class="divide-y divide-gray-200 lg:grid lg:grid-cols-12 lg:divide-x lg:divide-y-0">
+          <%== render("account/submenu") %>
+          <div class="divide-y divide-gray-200 lg:col-span-8 xl:col-span-9 2xl:col-span-10 pb-10">
+            <div class="px-4 py-6 sm:p-6 lg:pb-8 space-y-4">
+              <h2 class="text-lg font-medium leading-6 text-gray-900">Verify New Email</h2>
+              <form role="form" method="POST">
+                <%== rodauth.csrf_tag("/" + rodauth.verify_login_change_route) %>
+                <div class="mt-6 grid grid-cols-6 gap-6">
+                  <div class="col-span-6">
+                    <%== render("components/form/submit_button", locals: { text: "Click to Verify New Email" }) %>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+<% else %>
+  <% @page_message = "Verify your new email" %>
+
+  <form class="rodauth space-y-6" role="form" method="POST">
+    <%== rodauth.csrf_tag %>
+
+    <div class="flex flex-col text-center">
+      <%== render("components/form/submit_button", locals: { text: "Click to Verify New Email" }) %>
+      <a href="/login" class="mt-2 text-sm font-semibold leading-6 text-gray-900">Sign in to another account</a>
+    </div>
+  </form>
+<% end %>

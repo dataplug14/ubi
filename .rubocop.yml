@@ -1,0 +1,79 @@
+# Modified from https://www.fastruby.io/blog/ruby/code-quality/how-we-use-rubocop-and-standardrb.html
+require:
+  - rubocop-capybara
+  - rubocop-erb
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-rspec
+  - rubocop-sequel
+  - standard
+
+inherit_gem:
+  standard: config/base.yml
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  Exclude:
+    - public/**/*
+    - vendor/**/*
+    - node_modules/**/*
+
+RSpec:
+  Enabled: true
+
+Performance:
+  Enabled: true
+
+Rake:
+  Enabled: true
+
+Sequel:
+  Enabled: true
+
+RSpec/DescribeMethod:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+
+Style/BlockComments:
+  Enabled: false
+
+Layout/HeredocIndentation:
+  Enabled: false
+
+Layout/SpaceInsideHashLiteralBraces:
+  Exclude:
+    - 'views/**/*.erb'
+
+RSpec/ExampleLength:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/StubbedMock:
+  Enabled: false
+
+RSpec/MessageSpies:
+  Enabled: false
+
+RSpec/SubjectStub:
+  Enabled: false
+
+RSpec/ExpectInHook:
+  Enabled: false
+
+RSpec/InstanceVariable:
+  Enabled: false
+
+RSpec/SpecFilePathFormat:
+  Exclude:
+    - 'spec/routes/**/*.rb'
+
+Sequel/IrreversibleMigration:
+  Enabled: false
+
+Capybara/ClickLinkOrButtonStyle:
+  EnforcedStyle: strict
